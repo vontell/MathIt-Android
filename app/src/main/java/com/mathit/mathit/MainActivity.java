@@ -1,81 +1,83 @@
 package com.mathit.mathit;
 
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
-import android.graphics.Color;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
-import android.util.Base64;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.facebook.messenger.MessengerUtils;
-import com.facebook.messenger.MessengerThreadParams;
 import com.facebook.messenger.ShareToMessengerParams;
+import com.mathit.mathit.latex.LatexParser;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * MainActivity that shows an interface to create LaTeX images
  * @author Aaron Vontell
  * @version 7.27.2016
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
 
-    /*
+
     private static final int REQUEST_CODE_SHARE_TO_MESSENGER = 1;
+    private static final String mathJaxURL = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    private static final String DEFAULT_PATH = "lateximage.png";
+    private static final String MIME_TYPE = "image/png";
+
+    private WebView latexDisplay;
+    private EditText inputEditText;
+    private View fbButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        try {
-            PackageInfo info = getPackageManager().getPackageInfo(
-                    "com.mathit.mathit",
-                    PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-            }
-        } catch (PackageManager.NameNotFoundException e) {
+        instantiateViews();
 
-        } catch (NoSuchAlgorithmException e) {
-
-        }
-
-        View fbButton = findViewById(R.id.button_layout);
-        fbButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendImage();
-            }
-        });
+        parseLatex();
 
     }
-    */
 
-    /*
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // For situations such as a screen rotation
+        parseLatex();
+
+    }
+
+
+    /**
      * Sends the created latex image to FB Messenger
-     *
+     */
     private void sendImage() {
 
-        String mimeType = "image/jpeg";
-        Uri contentUri = Uri.parse("android.resource://com.mathit.mathit/drawable/astro");
+
+        Bitmap latexImage = getDisplayImage();
+        File imageFile = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), DEFAULT_PATH);
+        Uri contentUri = saveFile(latexImage, imageFile);
+
+        if(contentUri == null) {
+            // TODO: Display error dialog
+        }
 
         // contentUri points to the content being shared to Messenger
         ShareToMessengerParams shareToMessengerParams =
-                ShareToMessengerParams.newBuilder(contentUri, mimeType)
+                ShareToMessengerParams.newBuilder(contentUri, MIME_TYPE)
                         .build();
 
         // Sharing from an Activity
@@ -84,58 +86,123 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 REQUEST_CODE_SHARE_TO_MESSENGER,
                 shareToMessengerParams);
 
-    }*/
-
-    private String doubleEscapeTeX(String s) {
-        String t="";
-        for (int i=0; i < s.length(); i++) {
-            if (s.charAt(i) == '\'') t += '\\';
-            if (s.charAt(i) != '\n') t += s.charAt(i);
-            if (s.charAt(i) == '\\') t += "\\";
-        }
-        return t;
     }
 
-    public void onClick(View v) {
-        if (v == findViewById(R.id.button2)) {
-            WebView w = (WebView) findViewById(R.id.webView);
-            EditText e = (EditText) findViewById(R.id.edit);
-            w.loadUrl("javascript:document.getElementById('math').innerHTML='\\\\["
-                    +doubleEscapeTeX(e.getText().toString())+"\\\\]';");
-            w.loadUrl("javascript:MathJax.Hub.Queue(['Typeset',MathJax.Hub]);");
-        }
+    /**
+     * Grabs and loads the views within the main activity of this application
+     */
+    private void instantiateViews() {
+
+        latexDisplay = (WebView) findViewById(R.id.latex_display);
+        inputEditText = (EditText) findViewById(R.id.latex_input);
+        fbButton = findViewById(R.id.fb_button);
+
+        inputEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                parseLatex();
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        fbButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendImage();
+            }
+        });
+
+        latexDisplay.getSettings().setJavaScriptEnabled(true);
+        latexDisplay.getSettings().setBuiltInZoomControls(false);
+        latexDisplay.loadDataWithBaseURL("http://bar","<script type='text/javascript' "
+                + "src='" + mathJaxURL + "'"
+                + "></script><span id='math'></span>", "text/html", "utf-8", "");
+
     }
 
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        WebView w = (WebView) findViewById(R.id.webView);
-        w.getSettings().setJavaScriptEnabled(true);
-        w.getSettings().setBuiltInZoomControls(false);
-        w.loadDataWithBaseURL("http://bar", "<script type='text/x-mathjax-config'>"
-                +"MathJax.Hub.Config({ "
-                +"showMathMenu: false, "
-                +"jax: ['input/TeX','output/HTML-CSS'], "
-                +"extensions: ['tex2jax.js'], "
-                +"TeX: { extensions: ['AMSmath.js','AMSsymbols.js',"
-                +"'noErrors.js','noUndefined.js'] } "
-                +"});</script>"
-                +"<script type='text/javascript' "
-                +"src='file:///android_asset/MathJax/MathJax.js'"
-                +"></script><span id='math'></span>","text/html","utf-8","");
-        /*String newurl = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-        w.loadDataWithBaseURL("http://bar","<script type='text/javascript' "
-                +"src='"+newurl+"'"
-                +"></script><span id='math'></span>","text/html","utf-8","");*/
-        EditText e = (EditText) findViewById(R.id.edit);
-        e.setBackgroundColor(Color.LTGRAY);
-        e.setTextColor(Color.BLACK);
-        e.setText("");
-        Button b = (Button) findViewById(R.id.button2);
-        b.setOnClickListener(this);
+    /**
+     * Creates a bitmap from the Latex Display
+     * @return
+     */
+    private Bitmap getDisplayImage() {
+
+        // Create the image from the Latex Display
+        Bitmap bitmap = Bitmap.createBitmap(
+                latexDisplay.getWidth(),
+                latexDisplay.getHeight(),
+                Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bitmap);
+        latexDisplay.draw(c);
+
+        return bitmap;
+
+    }
+
+    /**
+     * Saves the bitmap as a png to internal storage, and returns the URI to the file
+     * @param bmp The image to save as a png
+     * @param file The image file
+     * @return
+     */
+    private Uri saveFile(Bitmap bmp, File file) {
+
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+            Uri location = Uri.fromFile(file);
+            Log.d("SEND", "Uri: " + location.toString());
+            return location;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return null;
+
+    }
+
+    /**
+     * Parses the latex from EditText and displays inside the web view
+     */
+    private void parseLatex() {
+
+        String toParse = LatexParser.doubleEscapeTeX(inputEditText.getText().toString());
+        if(toParse.equals("")) {
+            toParse = "No\\ content";
+        }
+
+        // Load JS depending on the Android version, for compatibility
+        // Then display the LaTeX within the WebView
+        if (android.os.Build.VERSION.SDK_INT < 19) {
+            latexDisplay.loadUrl("javascript:document.getElementById('math').innerHTML='\\\\["
+                    + LatexParser.doubleEscapeTeX(inputEditText.getText().toString()) + "\\\\]';", null);
+            latexDisplay.loadUrl("javascript:MathJax.Hub.Queue(['Typeset',MathJax.Hub]);", null);
+        } else {
+
+            latexDisplay.evaluateJavascript("javascript:document.getElementById('math').innerHTML='\\\\["
+                    + LatexParser.doubleEscapeTeX(inputEditText.getText().toString()) + "\\\\]';", null);
+            latexDisplay.evaluateJavascript("javascript:MathJax.Hub.Queue(['Typeset',MathJax.Hub]);", null);
+
+        }
 
     }
 
