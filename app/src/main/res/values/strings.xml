@@ -2,4 +2,7 @@
     <string name="app_name">MathIt</string>
 
     <string name="facebook_app_id">1589289674699047</string>
+
+    <string name="saved_equations_title">Saved Equations</string>
+    <string name="saved_equations_cancel">Cancel</string>
 </resources>

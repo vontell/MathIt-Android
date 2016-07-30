@@ -24,5 +24,6 @@ dependencies {
     //compile files('libs/jlatexmath-1.0.3.jar')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.facebook.android:facebook-android-sdk:4.+'
+    compile 'com.facebook.android:facebook-android-sdk:4.14.0'
+    compile 'com.afollestad.material-dialogs:core:0.8.6.2'
 }

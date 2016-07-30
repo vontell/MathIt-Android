@@ -10,17 +10,24 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.facebook.messenger.MessengerUtils;
 import com.facebook.messenger.ShareToMessengerParams;
+import com.mathit.mathit.custom.SavedHelper;
+import com.mathit.mathit.custom.SavedLatexEquation;
 import com.mathit.mathit.latex.LatexParser;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * MainActivity that shows an interface to create LaTeX images
@@ -203,6 +210,68 @@ public class MainActivity extends AppCompatActivity {
             latexDisplay.evaluateJavascript("javascript:MathJax.Hub.Queue(['Typeset',MathJax.Hub]);", null);
 
         }
+
+    }
+
+    /**
+     * Displays a dialog of equations that the user has saved, which
+     * they can select as input. The selected equation gets inserted
+     * into the current input at the cursor.
+     */
+    private void displaySavedDialog() {
+
+        List<SavedLatexEquation> savedEquations = new SavedHelper(this).getSavedEquations();
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        boolean wrapInScrollView = true;
+        MaterialDialog dialog = new MaterialDialog.Builder(this)
+                .title(R.string.saved_equations_title)
+                .customView(R.layout.image_list, wrapInScrollView)
+                .negativeText(R.string.saved_equations_cancel)
+                .show();
+
+        ViewGroup imageList = (ViewGroup) dialog.getCustomView();
+
+        for(SavedLatexEquation equation : savedEquations) {
+
+            View equationView = inflater.inflate(R.layout.saved_latex_view, null);
+            ImageButton equationButton = (ImageButton) equationView.findViewById(R.id.equation_button);
+            equationButton.setImageBitmap(equation.getImage());
+
+            final String input = equation.getLatexInput();
+            equationButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    insertEquationFrom(input);
+                }
+            });
+
+            imageList.addView(equationView);
+
+        }
+
+    }
+
+    /**
+     * Insert the equation text into the current cursor pointer or selection
+     * @param input The new latex input
+     */
+    private void insertEquationFrom(String input) {
+
+        int start = Math.max(inputEditText.getSelectionStart(), 0);
+        int end = Math.max(inputEditText.getSelectionEnd(), 0);
+        inputEditText.getText().replace(Math.min(start, end), Math.max(start, end),
+                input, 0, input.length());
+
+    }
+
+    /**
+     * Saves the current equation to shared preferences
+     */
+    private void saveEquation() {
+
+        SavedHelper saver = new SavedHelper(this);
+        saver.saveEquation(getDisplayImage(), inputEditText.getEditableText().toString());
 
     }
 
