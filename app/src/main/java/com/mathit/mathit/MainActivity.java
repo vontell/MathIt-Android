@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.facebook.messenger.MessengerUtils;
@@ -103,6 +104,22 @@ public class MainActivity extends AppCompatActivity {
         latexDisplay = (WebView) findViewById(R.id.latex_display);
         inputEditText = (EditText) findViewById(R.id.latex_input);
         fbButton = findViewById(R.id.fb_button);
+
+        ImageView saveButton = (ImageView) findViewById(R.id.save_image);
+        ImageView loadButton = (ImageView) findViewById(R.id.load_image);
+
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveEquation();
+            }
+        });
+        loadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displaySavedDialog();
+            }
+        });
 
         inputEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -224,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(this);
 
         boolean wrapInScrollView = true;
-        MaterialDialog dialog = new MaterialDialog.Builder(this)
+        final MaterialDialog dialog = new MaterialDialog.Builder(this)
                 .title(R.string.saved_equations_title)
                 .customView(R.layout.image_list, wrapInScrollView)
                 .negativeText(R.string.saved_equations_cancel)
@@ -243,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     insertEquationFrom(input);
+                    dialog.cancel();
                 }
             });
 
@@ -272,6 +290,11 @@ public class MainActivity extends AppCompatActivity {
 
         SavedHelper saver = new SavedHelper(this);
         saver.saveEquation(getDisplayImage(), inputEditText.getEditableText().toString());
+        new MaterialDialog.Builder(this)
+                .title(R.string.save_confirm_title)
+                .positiveText(R.string.save_confirm_accept)
+                .content(R.string.save_confirm_content)
+                .build().show();
 
     }
 

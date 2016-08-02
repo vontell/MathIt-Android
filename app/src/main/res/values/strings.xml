@@ -5,4 +5,9 @@
 
     <string name="saved_equations_title">Saved Equations</string>
     <string name="saved_equations_cancel">Cancel</string>
+
+    <string name="save_confirm_title">Equation Saved</string>
+    <string name="save_confirm_accept">OK</string>
+    <string name="save_confirm_content">Your equation has been successfully saved.</string>
+
 </resources>
