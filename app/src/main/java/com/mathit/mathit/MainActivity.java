@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -56,6 +57,12 @@ public class MainActivity extends AppCompatActivity {
 
         parseLatex();
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        parseLatex();
     }
 
     @Override
@@ -107,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
         ImageView saveButton = (ImageView) findViewById(R.id.save_image);
         ImageView loadButton = (ImageView) findViewById(R.id.load_image);
+        ImageView deleteButton = (ImageView) findViewById(R.id.delete_text);
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,6 +126,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 displaySavedDialog();
+            }
+        });
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                inputEditText.setText("");
             }
         });
 
@@ -211,19 +225,19 @@ public class MainActivity extends AppCompatActivity {
 
         String toParse = LatexParser.doubleEscapeTeX(inputEditText.getText().toString());
         if(toParse.equals("")) {
-            toParse = "No\\ content";
+            toParse = "No\\\\ content";
         }
 
         // Load JS depending on the Android version, for compatibility
         // Then display the LaTeX within the WebView
         if (android.os.Build.VERSION.SDK_INT < 19) {
             latexDisplay.loadUrl("javascript:document.getElementById('math').innerHTML='\\\\["
-                    + LatexParser.doubleEscapeTeX(inputEditText.getText().toString()) + "\\\\]';", null);
+                    + toParse + "\\\\]';", null);
             latexDisplay.loadUrl("javascript:MathJax.Hub.Queue(['Typeset',MathJax.Hub]);", null);
         } else {
 
             latexDisplay.evaluateJavascript("javascript:document.getElementById('math').innerHTML='\\\\["
-                    + LatexParser.doubleEscapeTeX(inputEditText.getText().toString()) + "\\\\]';", null);
+                    + toParse + "\\\\]';", null);
             latexDisplay.evaluateJavascript("javascript:MathJax.Hub.Queue(['Typeset',MathJax.Hub]);", null);
 
         }
@@ -247,20 +261,30 @@ public class MainActivity extends AppCompatActivity {
                 .negativeText(R.string.saved_equations_cancel)
                 .show();
 
-        ViewGroup imageList = (ViewGroup) dialog.getCustomView();
+        final ViewGroup imageList = (ViewGroup) dialog.getCustomView();
 
         for(SavedLatexEquation equation : savedEquations) {
 
-            View equationView = inflater.inflate(R.layout.saved_latex_view, null);
+            final View equationView = inflater.inflate(R.layout.saved_latex_view, null);
             ImageButton equationButton = (ImageButton) equationView.findViewById(R.id.equation_button);
+            ImageView deleteButton = (ImageView) equationView.findViewById(R.id.delete_eq_button);
             equationButton.setImageBitmap(equation.getImage());
 
             final String input = equation.getLatexInput();
+            final int index = equation.getIndex();
             equationButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     insertEquationFrom(input);
                     dialog.cancel();
+                }
+            });
+            deleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new SavedHelper(view.getContext()).deleteEquation(index);
+                    imageList.removeView(equationView);
+                    imageList.invalidate();
                 }
             });
 

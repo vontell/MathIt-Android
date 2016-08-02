@@ -3,9 +3,26 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageButton
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/equation_button"
-        android:layout_gravity="center_horizontal" />
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/equation_button"
+            android:layout_gravity="center_horizontal"
+            android:background="@android:color/transparent"
+            android:scrollIndicators="bottom"
+            android:layout_weight="1"
+            android:minHeight="32dp" />
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="fill_parent"
+            android:id="@+id/delete_eq_button"
+            android:src="@drawable/icon_delete"
+            android:minHeight="32dp" />
+    </LinearLayout>
 </LinearLayout>

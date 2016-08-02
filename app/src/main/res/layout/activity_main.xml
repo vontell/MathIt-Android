@@ -23,8 +23,8 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_toLeftOf="@+id/save_image"
-        android:layout_toStartOf="@+id/save_image" />
+        android:layout_toStartOf="@+id/save_image"
+        android:layout_toLeftOf="@+id/save_image" />
 
     <WebView
         android:layout_width="wrap_content"
@@ -32,7 +32,10 @@
         android:id="@+id/latex_display"
         android:minHeight="72dp"
         android:layout_below="@+id/latex_input"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/delete_text"
+        android:layout_alignEnd="@+id/delete_text" />
 
     <ImageView
         android:layout_width="32dp"
@@ -40,10 +43,10 @@
         android:id="@+id/save_image"
         android:src="@drawable/equation_save"
         android:clickable="true"
-        android:layout_alignTop="@+id/load_image"
+        android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/load_image"
         android:layout_toStartOf="@+id/load_image"
-        android:layout_alignBottom="@+id/load_image" />
+        android:layout_above="@+id/latex_display" />
 
     <ImageView
         android:layout_width="32dp"
@@ -51,7 +54,18 @@
         android:id="@+id/load_image"
         android:src="@drawable/equation_open"
         android:clickable="true"
-        android:layout_alignTop="@+id/latex_input"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/delete_text"
+        android:layout_toStartOf="@+id/delete_text"
+        android:layout_above="@+id/latex_display" />
+
+    <ImageView
+        android:layout_width="32dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/delete_text"
+        android:src="@drawable/icon_delete"
+        android:clickable="true"
+        android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/fb_button"
         android:layout_alignEnd="@+id/fb_button"
         android:layout_above="@+id/latex_display" />
